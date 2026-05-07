@@ -97,24 +97,6 @@ function Footer() {
         </div>
       </div>
 
-      {/* Animations */}
-      <style>{`
-        @keyframes float1 {
-          0%, 100% { transform: translate(0, 0); }
-          50% { transform: translate(20px, 20px); }
-        }
-        @keyframes float2 {
-          0%, 100% { transform: translate(0, 0); }
-          50% { transform: translate(-15px, 15px); }
-        }
-        @keyframes float3 {
-          0%, 100% { transform: translate(0, 0); }
-          50% { transform: translate(0, -20px); }
-        }
-        .animate-float1 { animation: float1 8s ease-in-out infinite; }
-        .animate-float2 { animation: float2 10s ease-in-out infinite; }
-        .animate-float3 { animation: float3 12s ease-in-out infinite; }
-      `}</style>
     </footer>
   )
 }

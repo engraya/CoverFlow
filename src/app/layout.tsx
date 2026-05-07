@@ -4,22 +4,24 @@ import './globals.css'
 import 'bs-icon/icons.css'
 import Footer from '@/components/layout/Footer'
 import { Navbar, ThemeProvider } from '@/components/layout'
-import 'react-toastify/dist/ReactToastify.css';
-import { ToastContainer } from 'react-toastify';
+import { Toaster } from '@/components/ui/sonner'
+
 export const metadata: Metadata = {
-  title: 'Home',
-  description: 'Home page '
+  title: {
+    template: '%s | GenLetter AI',
+    default: 'GenLetter AI — AI-Powered Cover Letters',
+  },
+  description:
+    'Generate professional, personalized cover letters in seconds using Google Gemini AI. No templates, no guesswork.',
 }
 
-export default async function MainLayout({ children }) {
-
+export default async function MainLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html suppressHydrationWarning>
-      <head>
-        <title>GenLetter AI</title>
-        <meta name='description' content='A Starter with Next.js' />
-      </head>
-
+    <html lang='en' suppressHydrationWarning>
       <body className={GeistSans.className}>
         <ThemeProvider attribute='class'>
           <main className='min-h-screen'>
@@ -29,8 +31,8 @@ export default async function MainLayout({ children }) {
             </div>
             <Footer />
           </main>
+          <Toaster />
         </ThemeProvider>
-        <ToastContainer />
       </body>
     </html>
   )

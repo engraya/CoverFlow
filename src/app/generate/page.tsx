@@ -1,189 +1,238 @@
 'use client'
 
-import React, { useState } from 'react'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { toast } from 'sonner'
+import ReactMarkdown from 'react-markdown'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { GenerateCoverLetter, createWordDocument } from '@/actions/generateCoverLetter'
-import { toast } from "react-toastify";
-import ReactMarkdown from 'react-markdown'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import { GenerateCoverLetter } from '@/actions/generateCoverLetter'
+import { createWordDocument } from '@/lib/document-export'
+import { coverLetterSchema, type CoverLetterInput } from '@/lib/schemas'
 
 export default function GeneratePage() {
-  const [formData, setFormData] = useState({
-    name: '',
-    position: '',
-    company: '',
-    experience: '',
-    skills: '',
-    notes: '',
-    email: '',
-    phone: '',
+  const [coverLetter, setCoverLetter] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+
+  const form = useForm<CoverLetterInput>({
+    resolver: zodResolver(coverLetterSchema),
+    defaultValues: {
+      name: '',
+      position: '',
+      company: '',
+      experience: '',
+      skills: '',
+      email: '',
+      phone: '',
+      address: '',
+      notes: '',
+    },
   })
 
-  const [isLoading, setIsLoading] = useState(false)
-  const [coverLetter, setCoverLetter] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value })
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const onSubmit = async (data: CoverLetterInput) => {
     setIsLoading(true)
-    setError(null)
-
     try {
-      const result = await GenerateCoverLetter(formData)
+      const result = await GenerateCoverLetter(data)
       setCoverLetter(result.coverLetter)
-      toast.success('Cover letter generated successfully!', {
-        position: "top-center",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light"
-      });
-    } catch (err) {
-      setError('Failed to generate cover letter. Please try again.');
-      toast.error("Failed to generate cover letter. Please try again.", {
-        position: "top-center",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light"
-      });
+      toast.success('Cover letter generated successfully!')
+    } catch {
+      toast.error('Failed to generate cover letter. Please try again.')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleDownload = () => {
-    if (coverLetter) {
-      createWordDocument(coverLetter, formData.position, formData.name);
-      toast.success('Cover letter downloaded successfully!', {
-        position: "top-center",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light"
-      });
-    }
+  const handleDownload = async () => {
+    if (!coverLetter) return
+    const { name, position } = form.getValues()
+    await createWordDocument(coverLetter, position, name)
+    toast.success('Cover letter downloaded!')
+  }
+
+  const handleReset = () => {
+    setCoverLetter(null)
+    form.reset()
   }
 
   return (
-    <section className="min-h-screen px-6 bg-white dark:bg-gray-950 py-12">
-      <div className="max-w-2xl mx-auto space-y-8">
-  
-
+    <section className='min-h-screen px-6 bg-white dark:bg-gray-950 py-12'>
+      <div className='max-w-2xl mx-auto space-y-8'>
         {!coverLetter ? (
           <>
-            <div className="text-center">
-              <h1 className="text-4xl font-extrabold bg-gradient-to-r from-blue-400 to-emerald-500 bg-clip-text text-transparent dark:text-white mb-2">
+            <div className='text-center'>
+              <h1 className='text-4xl font-extrabold bg-gradient-to-r from-blue-400 to-emerald-500 bg-clip-text text-transparent mb-2'>
                 Generate Your Cover Letter
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 text-base">
+              <p className='text-gray-600 dark:text-gray-300 text-base'>
                 Fill in the details to create a professional, AI-generated letter.
               </p>
             </div>
-            <form className="space-y-6" onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <Label htmlFor="name">Your Full Name</Label>
-                <Input id="name" value={formData.name} onChange={handleChange} placeholder="John Doe" required />
-              </div>
-              <div>
-                <Label htmlFor="position">Position Title</Label>
-                <Input id="position" value={formData.position} onChange={handleChange} placeholder="Software Engineer" required />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <Label htmlFor="company">Company Name</Label>
-                <Input id="company" value={formData.company} onChange={handleChange} placeholder="Tech Innovations Inc." required />
-              </div>
-              <div>
-                <Label htmlFor="experience">Years of Experience</Label>
-                <Input id="experience" type="number" value={formData.experience} onChange={handleChange} placeholder="3" required />
-              </div>
-            </div>
+            <Form {...form}>
+              <form className='space-y-6' onSubmit={form.handleSubmit(onSubmit)}>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                  <FormField
+                    control={form.control}
+                    name='name'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Your Full Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder='John Doe' {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name='position'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Position Title</FormLabel>
+                        <FormControl>
+                          <Input placeholder='Software Engineer' {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" required />
-              </div>
-              <div>
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input id="phone" value={formData.phone} onChange={handleChange} placeholder="+1 234 567 8900" required />
-              </div>
-            </div>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                  <FormField
+                    control={form.control}
+                    name='company'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Company Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder='Tech Innovations Inc.' {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name='experience'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Years of Experience</FormLabel>
+                        <FormControl>
+                          <Input type='number' placeholder='3' min='0' {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-            <div>
-              <Label htmlFor="skills">Key Skills / Technologies</Label>
-              <Input id="skills" value={formData.skills} onChange={handleChange} placeholder="React, Nextjs, Docker, AWS" required />
-            </div>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                  <FormField
+                    control={form.control}
+                    name='email'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email Address</FormLabel>
+                        <FormControl>
+                          <Input type='email' placeholder='john@example.com' {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name='phone'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone Number</FormLabel>
+                        <FormControl>
+                          <Input placeholder='+1 234 567 8900' {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-            <div>
-              <Label htmlFor="notes">Additional Notes (optional)</Label>
-              <Textarea
-                id="notes"
-                value={formData.notes}
-                onChange={handleChange}
-                placeholder="Any specifics you'd like the AI to include?"
-                rows={4}
-              />
-            </div>
+                <FormField
+                  control={form.control}
+                  name='address'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address (optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder='123 Main St, New York, NY' {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Generating...' : 'Generate Cover Letter'}
-            </Button>
+                <FormField
+                  control={form.control}
+                  name='skills'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Key Skills / Technologies</FormLabel>
+                      <FormControl>
+                        <Input placeholder='React, Next.js, Docker, AWS' {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-          </form>
-        
+                <FormField
+                  control={form.control}
+                  name='notes'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Additional Notes (optional)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Any specifics you'd like the AI to include?"
+                          rows={4}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button type='submit' className='w-full' disabled={isLoading}>
+                  {isLoading ? 'Generating...' : 'Generate Cover Letter'}
+                </Button>
+              </form>
+            </Form>
           </>
-      
         ) : (
-          <div className="text-center space-y-4">
-            <p className="text-green-600 dark:text-green-400 font-medium">Cover letter generated successfully!</p>
+          <div className='text-center space-y-4'>
+            <p className='text-green-600 dark:text-green-400 font-medium'>
+              Cover letter generated successfully!
+            </p>
 
-
-            {/* ✅ PREVIEW SECTION */}
-            <div className="prose prose-sm sm:prose lg:prose-lg dark:prose-invert max-h-[500px] overflow-y-auto border p-6 rounded-md bg-gray-50 dark:bg-gray-900 shadow">
-              <ReactMarkdown>{coverLetter || ''}</ReactMarkdown>
+            <div className='prose prose-sm sm:prose lg:prose-lg dark:prose-invert max-h-[500px] overflow-y-auto border p-6 rounded-md bg-gray-50 dark:bg-gray-900 shadow text-left'>
+              <ReactMarkdown>{coverLetter}</ReactMarkdown>
             </div>
 
-            <Button onClick={handleDownload} className="w-full">
+            <Button onClick={handleDownload} className='w-full'>
               Download as Word Document
             </Button>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setCoverLetter(null)
-                setFormData({
-                  name: '',
-                  position: '',
-                  company: '',
-                  experience: '',
-                  skills: '',
-                  notes: '',
-                  email: '',
-                  phone: '',
-                })
-              }}
-              className="w-full"
-            >
+            <Button variant='secondary' onClick={handleReset} className='w-full'>
               Generate Another
             </Button>
           </div>

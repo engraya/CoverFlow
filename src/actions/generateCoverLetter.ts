@@ -1,25 +1,19 @@
-import { chatSession } from "@/lib/gemini-ai"
-import {
-  Document,
-  Packer,
-  Paragraph,
-  TextRun,
-  AlignmentType,
-  HeadingLevel,
-} from "docx"
-import { saveAs } from "file-saver"
-import { CoverLetterInputType } from "@/types/coverLetter"
+'use server'
 
-async function GenerateCoverLetter({
-  name,
-  position,
-  company,
-  experience,
-  skills,
-  email,
-  phone,
-  notes,
-}: CoverLetterInputType): Promise<{ coverLetter: string }> {
+import { createGeminiModel, generationConfig } from '@/lib/gemini-ai'
+import { coverLetterSchema, type CoverLetterInput } from '@/lib/schemas'
+
+export async function GenerateCoverLetter(
+  input: CoverLetterInput
+): Promise<{ coverLetter: string }> {
+  const parsed = coverLetterSchema.safeParse(input)
+  if (!parsed.success) {
+    throw new Error('Invalid input: ' + parsed.error.issues[0].message)
+  }
+
+  const { name, position, company, experience, skills, email, phone, address, notes } =
+    parsed.data
+
   const promptTemplate = `
 You are an expert cover letter writer.
 
@@ -38,9 +32,9 @@ I am a highly motivated and results-oriented individual with a strong work ethic
 
 Thank you for considering my application. I have attached my resume and would welcome the opportunity to discuss my qualifications further.
 
-Sincerely,  
-[Your Name]  
-[Your Phone Number]  
+Sincerely,
+[Your Name]
+[Your Phone Number]
 [Your Email Address]
 --- SAMPLE FORMAT END ---
 
@@ -53,6 +47,7 @@ Use the following input:
 - Key Skills and Technologies: ${skills}
 - Phone Number: ${phone}
 - Email Address: ${email}
+${address ? `- Address: ${address}` : ''}
 ${notes ? `- Additional Notes: ${notes}` : ''}
 
 Guidelines:
@@ -60,13 +55,12 @@ Guidelines:
 - Use plain text formatting only (no markdown, HTML, or special characters).
 - Limit the letter to 3–4 concise, well-structured paragraphs and keep the total word count under 400.
 - Use realistic, professional-sounding placeholders or inferred content where information is missing.
-- Treat the “Additional Notes” section as the source of all extra context, such as:
+- Treat the "Additional Notes" section as the source of all extra context, such as:
   - Hiring manager name
   - Platform where the job was posted
   - Previous company details
   - Specific accomplishments
   - Passion areas or motivations
-  - Contact information (email and phone)
 - If any of these are not provided, substitute with polite, generic alternatives.
 - Ensure the letter is coherent, professional, and tailored to the job application.
 - Avoid using overly complex language or jargon.
@@ -83,6 +77,8 @@ Return only a valid JSON object in the following format:
 `
 
   try {
+    const model = createGeminiModel()
+    const chatSession = model.startChat({ generationConfig, history: [] })
     const result = await chatSession.sendMessage(promptTemplate)
     const rawResponse = result.response?.text()
 
@@ -92,96 +88,15 @@ Return only a valid JSON object in the following format:
     }
 
     const jsonString = match[1].trim()
-    const parsedObject = JSON.parse(jsonString)
+    const parsedObject = JSON.parse(jsonString) as { coverLetter?: string }
 
     if (!parsedObject.coverLetter) {
       throw new Error('Cover letter not found in response')
     }
 
-    return parsedObject
+    return { coverLetter: parsedObject.coverLetter }
   } catch (error) {
     console.error('Error generating cover letter:', error)
     throw new Error('Failed to generate cover letter')
   }
 }
-
-
-
-// Converts a string to a .txt Blob and returns an object URL
-function convertToTxtFile(content: string, fileName: string = "cover_letter.txt"): string {
-  const blob = new Blob([content], { type: "text/plain" })
-  return URL.createObjectURL(blob)
-}
-
-// Triggers the download of the .txt file
-function downloadTxtFile(content: string, fileName: string = "cover_letter.txt") {
-  const url = convertToTxtFile(content, fileName)
-  const a = document.createElement("a")
-  a.href = url
-  a.download = fileName
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
-}
-
-
-function createParagraphsFromText(text: string): Paragraph[] {
-  const lines = text.split("\n").map((line) => line.trim()).filter(Boolean)
-  return lines.map(
-    (line) =>
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: line,
-            font: "Calibri",
-            size: 24,
-          }),
-        ],
-        spacing: { after: 200 },
-        alignment: AlignmentType.LEFT,
-      })
-  )
-}
-
-async function createWordDocument(coverLetter: string, position: string, name: string) {
-  const paragraphs = createParagraphsFromText(coverLetter)
-
-  const doc = new Document({
-    sections: [
-      {
-        properties: {
-          page: {
-            size: {
-              width: 11906,
-              height: 16838,
-              orientation: "portrait",
-            },
-            margin: {
-              top: 1440,
-              right: 1440,
-              bottom: 1440,
-              left: 1440,
-            },
-          },
-        },
-        children: [
-          new Paragraph({
-            text: `Application for ${position}`,
-            heading: HeadingLevel.HEADING_1,
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 400 },
-          }),
-          ...paragraphs,
-        ],
-      },
-    ],
-  })
-
-  const blob = await Packer.toBlob(doc)
-  const safeFileName = position.replace(/[<>:"\/\\|?*]+/g, "-")
-  saveAs(blob, `Cover Letter - Position Title ${safeFileName}.docx`)
-}
-
-
-export { GenerateCoverLetter, convertToTxtFile, downloadTxtFile, createWordDocument }
