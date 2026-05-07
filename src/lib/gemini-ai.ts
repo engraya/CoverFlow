@@ -10,5 +10,5 @@ export const generationConfig = {
 
 export function createGeminiModel() {
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
-  return genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+  return genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' })
 }

@@ -1,6 +1,5 @@
 'use client'
-import { IconType } from 'react-icons'
-import { LuMoon, LuSun, LuMonitor } from 'react-icons/lu'
+import { Moon, Sun, Monitor } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { Button } from '@/components/ui/button'
 import Cookies from 'js-cookie'
@@ -15,18 +14,18 @@ export function ThemeToggle() {
 
   const { setTheme, theme = serverTheme } = useTheme()
 
-  const nextTheme: any = {
+  const nextTheme: Record<string, string> = {
     light: 'dark',
     dark: 'system',
     system: 'light'
   }
 
-  const ThemeIcon = {
-    undefined: LuSun,
-    light: LuSun,
-    dark: LuMoon,
-    system: LuMonitor
-  }[theme] as IconType
+  const ThemeIcon = ({
+    undefined: Sun,
+    light: Sun,
+    dark: Moon,
+    system: Monitor
+  } as Record<string, React.ComponentType<{ className?: string }>>)[theme ?? 'light'] ?? Sun
 
   return (
     <Button
@@ -40,9 +39,7 @@ export function ThemeToggle() {
         setTheme(newTheme)
       }}
     >
-      {/* <BrowserOnly> */}
-      <ThemeIcon className='text-xl' />
-      {/* </BrowserOnly> */}
+      <ThemeIcon className='w-4 h-4' />
       <span className='sr-only'>Toggle theme</span>
     </Button>
   )

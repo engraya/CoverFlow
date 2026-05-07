@@ -33,8 +33,11 @@ I am a highly motivated and results-oriented individual with a strong work ethic
 Thank you for considering my application. I have attached my resume and would welcome the opportunity to discuss my qualifications further.
 
 Sincerely,
+
 [Your Name]
+
 [Your Phone Number]
+
 [Your Email Address]
 --- SAMPLE FORMAT END ---
 

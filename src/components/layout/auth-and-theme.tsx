@@ -1,6 +1,6 @@
 
 import { ThemeToggle } from './theme-toggle'
-import { IoLogoGithub } from 'react-icons/io5'
+import { Github } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 export default function AuthAndTheme() {
@@ -19,7 +19,7 @@ export default function AuthAndTheme() {
         suppressHydrationWarning
         onClick={redirectToGithub}
     >
-      <IoLogoGithub className="text-lg" />
+      <Github className='w-4 h-4' />
     </Button>
       <ThemeToggle />
     </div>

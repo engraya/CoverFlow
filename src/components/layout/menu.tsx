@@ -10,7 +10,7 @@ import {
   DialogTrigger
 } from '@/components/ui'
 import { cn, RenderList } from 'atomic-utils'
-import Icon from 'bs-icon'
+import { Menu as MenuIcon, X } from 'lucide-react'
 import { Fragment, useState } from 'react'
 import AuthAndTheme from './auth-and-theme'
 import { LINKS } from './links'
@@ -19,9 +19,9 @@ import { LogoIcon } from '../Icons'
 const useGetLinksStyle = () => {
   const pathname = usePathname()
   return function getLinkStyles(href: string) {
-    return cn('text-sm text-foreground/70 hover:text-foreground', {
-      'text-emerald-700 dark:text-emerald-400 font-medium hover:text-blue-700':
-        pathname.startsWith(href)
+    const isActive = href === '/' ? pathname === href : pathname.startsWith(href)
+    return cn('text-sm text-foreground/70 hover:text-foreground transition-colors', {
+      'text-primary font-medium hover:text-primary': isActive
     })
   }
 }
@@ -39,7 +39,7 @@ export default function Menu() {
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
               <Button variant='ghost' size='icon' className='rounded-full'>
-                <Icon name='list' className='text-lg' />
+                <MenuIcon className='w-5 h-5' />
               </Button>
             </DialogTrigger>
             <DialogContent
@@ -48,7 +48,7 @@ export default function Menu() {
             >
               <DialogClose className='absolute left-6 top-3' asChild>
                 <Button size='icon' variant='ghost' className='rounded-full'>
-                  <Icon name='x' className='text-lg' />
+                  <X className='w-5 h-5' />
                 </Button>
               </DialogClose>
               <DialogTitle className='h-0 hidden'></DialogTitle>
@@ -61,7 +61,7 @@ export default function Menu() {
                     href={'/'}
                     onClick={hideMenu}
                   >
-                    GenLetter AI
+                    CoverFlow
                   </Link>
                 </div>
 
@@ -85,7 +85,7 @@ export default function Menu() {
           </Dialog>
             <Link href="/" className="flex items-center space-x-2">
               <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-500">
-                GenLetter AI
+                CoverFlow
               </span>
             </Link>
         </div>
@@ -97,7 +97,7 @@ export default function Menu() {
             <Link href="/" className="flex items-center space-x-2">
               <LogoIcon />
               <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-500">
-                GenLetter AI
+                CoverFlow
               </span>
             </Link>
 

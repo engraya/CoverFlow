@@ -8,8 +8,8 @@ import { Toaster } from '@/components/ui/sonner'
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | GenLetter AI',
-    default: 'GenLetter AI — AI-Powered Cover Letters',
+    template: '%s | CoverFlow',
+    default: 'CoverFlow — AI-Powered Cover Letters',
   },
   description:
     'Generate professional, personalized cover letters in seconds using Google Gemini AI. No templates, no guesswork.',
